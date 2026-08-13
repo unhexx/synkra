@@ -1,0 +1,49 @@
+version: "3.9"
+
+# Minimal agentic development environment for Synkra
+# Expand as services are implemented.
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: synkra
+      POSTGRES_PASSWORD: synkra
+      POSTGRES_DB: synkra
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  temporal:
+    image: temporalio/auto-setup:1.25.0
+    depends_on:
+      - postgres
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_USER=synkra
+      - POSTGRES_PWD=synkra
+      - POSTGRES_SEEDS=postgres
+    ports:
+      - "7233:7233"
+
+  temporal-ui:
+    image: temporalio/ui:2.31.0
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "8080:8080"
+
+  # api:
+  #   build: ./apps/api
+  #   ports:
+  #     - "8000:8000"
+  #   depends_on:
+  #     - postgres
+  #     - temporal
+
+volumes:
+  pgdata:
